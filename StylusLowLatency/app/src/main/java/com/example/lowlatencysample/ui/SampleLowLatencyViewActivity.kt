@@ -81,7 +81,7 @@ enum class SurfaceType {
   WRITE_IN_TEXTVIEW_DELEGATE // Write-in-textview delegate
 }
 
-class SampleInkViewActivity : ComponentActivity() {
+class SampleLowLatencyViewActivity : ComponentActivity() {
 
   private val viewModel: SampleInkViewModel by viewModels()
 

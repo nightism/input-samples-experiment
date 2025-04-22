@@ -16,7 +16,13 @@ class HomeActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
             Button(onClick = {
-                context.startActivity(Intent(context, SampleInkViewActivity::class.java))
+                context.startActivity(Intent(context, SampleLowLatencyViewActivity::class.java))
+            }) {
+                Text(text = "Go to Low Latency Activity")
+            }
+
+            Button(onClick = {
+                context.startActivity(Intent(context, SampleLowLatencyViewActivity::class.java))
             }) {
                 Text(text = "Go to Ink Activity")
             }
