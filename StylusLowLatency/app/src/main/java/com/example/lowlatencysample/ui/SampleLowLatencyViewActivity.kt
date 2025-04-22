@@ -315,10 +315,10 @@ class SampleLowLatencyViewActivity : ComponentActivity() {
         Text("Show Nav Bar")
       }
       Button(onClick = {
-        val windowInsetsController =
-          WindowCompat.getInsetsController(window, window.decorView)
+          val windowInsetsController =
+              WindowCompat.getInsetsController(window, window.decorView)
           windowInsetsController.show(
-            WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.captionBar()
+              WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.captionBar()
           )
           windowInsetsController.hide(WindowInsetsCompat.Type.navigationBars())
       }) {

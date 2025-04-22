@@ -61,6 +61,21 @@
     </activity>
 
     <activity
+        android:name=".ui.SampleInkViewActivity"
+        android:exported="true"
+        android:showWhenLocked="true"
+        android:turnScreenOn="true"
+        android:label="LowLatency Sample"
+        android:configChanges="orientation|keyboardHidden|screenSize|keyboard|navigation|screenLayout|uiMode|smallestScreenSize"
+        >
+      <!-- required for Note role -->
+      <intent-filter>
+        <action android:name="android.intent.action.CREATE_NOTE" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+    </activity>
+
+    <activity
         android:name="com.example.lowlatencysample.ui.TestActivity"
         android:exported="true"
         android:theme="@android:style/Theme.NoTitleBar"
