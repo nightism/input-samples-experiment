@@ -3,8 +3,8 @@ package com.example.lowlatencysample.ui
 import android.annotation.SuppressLint
 import android.graphics.Matrix
 import android.os.Bundle
-import android.view.View
 import android.view.MotionEvent
+import android.view.View
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,14 +16,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
@@ -43,12 +41,14 @@ import androidx.input.motionprediction.MotionEventPredictor
 
 class SampleInkViewActivity : ComponentActivity(), InProgressStrokesFinishedListener {
     private lateinit var inProgressStrokesView: InProgressStrokesView
-    private val finishedStrokesState = mutableStateOf(emptySet<Stroke>())
+    private val finishedStrokesState = mutableStateOf(emptyMap<InProgressStrokeId, Stroke>())
 
+    @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         inProgressStrokesView = InProgressStrokesView(this)
         inProgressStrokesView.addFinishedStrokesListener(this)
+        inProgressStrokesView.handoffDebounceTimeMs = 0
 
         setContent {
             Column {
@@ -57,7 +57,7 @@ class SampleInkViewActivity : ComponentActivity(), InProgressStrokesFinishedList
                         finish()
                     }) {
                         Text("Back to Home Activity")
-                   }
+                    }
                     Button(onClick = {
                         val windowInsetsController =
                             WindowCompat.getInsetsController(window, window.decorView)
@@ -81,17 +81,16 @@ class SampleInkViewActivity : ComponentActivity(), InProgressStrokesFinishedList
 
                 DrawingSurface(
                     inProgressStrokesView = inProgressStrokesView,
-                    finishedStrokesState = finishedStrokesState)
+                    finishedStrokesState = finishedStrokesState
+                )
             }
         }
-
-        inProgressStrokesView.addFinishedStrokesListener(this)
     }
 
     @UiThread
     override fun onStrokesFinished(strokes: Map<InProgressStrokeId, Stroke>) {
-        finishedStrokesState.value += strokes.values
-        inProgressStrokesView.removeFinishedStrokes(strokes.keys)
+        finishedStrokesState.value += strokes
+//        inProgressStrokesView.removeFinishedStrokes(strokes.keys)
     }
 }
 
@@ -99,7 +98,7 @@ class SampleInkViewActivity : ComponentActivity(), InProgressStrokesFinishedList
 @Composable
 fun DrawingSurface(
     inProgressStrokesView: InProgressStrokesView,
-    finishedStrokesState: MutableState<Set<Stroke>>
+    finishedStrokesState: MutableState<Map<InProgressStrokeId, Stroke>>
 ) {
     val canvasStrokeRenderer = CanvasStrokeRenderer.create()
     val currentPointerId = remember { mutableStateOf<Int?>(null) }
@@ -107,7 +106,14 @@ fun DrawingSurface(
     val defaultBrush = Brush.createWithColorIntArgb(
         family = StockBrushes.pressurePenLatest,
         colorIntArgb = Color.Black.toArgb(),
-        size = 5F,
+        size = 0.5F,
+        epsilon = 0.1F
+    )
+
+    val finishBrush = Brush.createWithColorIntArgb(
+        family = StockBrushes.pressurePenLatest,
+        colorIntArgb = Color.Red.toArgb(),
+        size = 0.5F,
         epsilon = 0.1F
     )
 
@@ -201,14 +207,23 @@ fun DrawingSurface(
 
         }
 
-        Canvas (modifier = Modifier) {
+
+
+        Canvas(modifier = Modifier) {
             val canvasTransform = Matrix()
+//            canvasTransform.setTranslate(10f, 10f)
             drawContext.canvas.nativeCanvas.concat(canvasTransform)
             val canvas = drawContext.canvas.nativeCanvas
 
             finishedStrokesState.value.forEach { stroke ->
-                canvasStrokeRenderer.draw(stroke = stroke, canvas = canvas, strokeToScreenTransform = canvasTransform)
+                canvasStrokeRenderer.draw(
+                    stroke = stroke.value, // .copy(finishBrush),
+                    canvas = canvas,
+                    strokeToScreenTransform = canvasTransform
+                )
             }
+
+            inProgressStrokesView.removeFinishedStrokes(finishedStrokesState.value.keys)
         }
     }
 }
